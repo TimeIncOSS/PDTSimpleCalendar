@@ -107,6 +107,8 @@
  */
 @property (nonatomic, strong) UIFont *textDefaultFont UI_APPEARANCE_SELECTOR;
 
+@property (nonatomic, strong) UIView *presentEventView;
+@property (nonatomic, strong) UIView *divider;
 /**
  * Set the date for this cell
  *
@@ -114,8 +116,7 @@
  *
  * @param calendar the calendar.
  */
-- (void)setDate:(NSDate*)date calendar:(NSCalendar*)calendar;
-
+- (void)setDate:(NSDate *)date calendar:(NSCalendar *)calendar hasEvent:(BOOL)hasEvent isOnBottom:(BOOL)isOnBottom;
 /**
  *  Force the refresh of the colors for the circle and the text
  */

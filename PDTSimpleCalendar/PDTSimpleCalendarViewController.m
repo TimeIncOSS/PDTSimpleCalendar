@@ -277,33 +277,6 @@ static const NSCalendarUnit kCalendarUnitYMD = NSCalendarUnitYear | NSCalendarUn
     self.collectionView.delegate = self;
     self.collectionView.dataSource = self;
     [self.collectionView setBackgroundColor:self.backgroundColor];
-
-    //Configure the Overlay View
-    [self.overlayView setBackgroundColor:[self.backgroundColor colorWithAlphaComponent:0.90]];
-    [self.overlayView setFont:[UIFont boldSystemFontOfSize:PDTSimpleCalendarOverlaySize]];
-    [self.overlayView setTextColor:self.overlayTextColor];
-    [self.overlayView setAlpha:0.0];
-    [self.overlayView setTextAlignment:NSTextAlignmentCenter];
-
-    [self.view addSubview:self.overlayView];
-    [self.overlayView setTranslatesAutoresizingMaskIntoConstraints:NO];
-    
-    //Configure the Weekday Header
-    self.weekdayHeader = [[PDTSimpleCalendarViewWeekdayHeader alloc] initWithCalendar:self.calendar weekdayTextType:self.weekdayTextType];
-    
-    [self.view addSubview:self.weekdayHeader];
-    [self.weekdayHeader setTranslatesAutoresizingMaskIntoConstraints:NO];
-    
-    NSInteger weekdayHeaderHeight = self.weekdayHeaderEnabled ? PDTSimpleCalendarWeekdayHeaderHeight : 0;
-
-    NSDictionary *viewsDictionary = @{@"overlayView": self.overlayView, @"weekdayHeader": self.weekdayHeader};
-    NSDictionary *metricsDictionary = @{@"overlayViewHeight": @(PDTSimpleCalendarFlowLayoutHeaderHeight), @"weekdayHeaderHeight": @(weekdayHeaderHeight)};
-
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[overlayView]|" options:NSLayoutFormatAlignAllTop metrics:nil views:viewsDictionary]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[weekdayHeader]|" options:NSLayoutFormatAlignAllTop metrics:nil views:viewsDictionary]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[weekdayHeader(weekdayHeaderHeight)][overlayView(overlayViewHeight)]" options:0 metrics:metricsDictionary views:viewsDictionary]];
-    
-    [self.collectionView setContentInset:UIEdgeInsetsMake(weekdayHeaderHeight, 0, 0, 0)];
 }
 
 #pragma mark - Rotation Handling
@@ -375,8 +348,25 @@ static const NSCalendarUnit kCalendarUnitYMD = NSCalendarUnitYear | NSCalendarUn
     if (cellDateComponents.month == firstOfMonthsComponents.month) {
         isSelected = ([self isSelectedDate:cellDate] && (indexPath.section == [self sectionForDate:cellDate]));
         isToday = [self isTodayDate:cellDate];
-        [cell setDate:cellDate calendar:self.calendar];
 
+        BOOL isOnBottom = false;
+        int daysInMonth = (int)[[NSCalendar currentCalendar] rangeOfUnit:NSCalendarUnitDay
+                                                                  inUnit:NSCalendarUnitMonth
+                                                                 forDate:cellDate].length;
+
+        switch ([[[NSCalendar currentCalendar] components:NSCalendarUnitWeekday fromDate:firstOfMonth] weekday]) {
+            case 6:
+                isOnBottom = daysInMonth == 31 ? indexPath.row > 34 : indexPath.row > 27;
+                break;
+            case 7:
+                isOnBottom = daysInMonth >= 30 ? isOnBottom = indexPath.row > 34 : indexPath.row > 27;
+                break;
+            default:
+                isOnBottom = indexPath.row > 27;
+                break;
+        }
+
+        [cell setDate:cellDate calendar:self.calendar hasEvent:[self isEnabledDate:cellDate] isOnBottom:isOnBottom];
         //Ask the delegate if this date should have specific colors.
         if ([self.delegate respondsToSelector:@selector(simpleCalendarViewController:shouldUseCustomColorsForDate:)]) {
             isCustomDate = [self.delegate simpleCalendarViewController:self shouldUseCustomColorsForDate:cellDate];
@@ -384,7 +374,7 @@ static const NSCalendarUnit kCalendarUnitYMD = NSCalendarUnitYear | NSCalendarUn
 
 
     } else {
-        [cell setDate:nil calendar:nil];
+        [cell setDate:nil calendar:nil hasEvent:false isOnBottom:YES];
     }
 
     if (isToday) {

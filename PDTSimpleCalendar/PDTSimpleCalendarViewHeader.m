@@ -22,23 +22,60 @@ const CGFloat PDTSimpleCalendarHeaderTextSize = 12.0f;
         [_titleLabel setTextColor:self.textColor];
         [_titleLabel setBackgroundColor:[UIColor clearColor]];
 
+        UIView *headerContainerView = [[UIView alloc] init];
+        [headerContainerView setBackgroundColor:[UIColor colorWithRed:235.f/255.f green:236.f/255.f blue:237.f/255.f alpha:1]];
+        [self addSubview:headerContainerView];
+        [headerContainerView setTranslatesAutoresizingMaskIntoConstraints:NO];
+
         [self addSubview:_titleLabel];
         [_titleLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-        UIView *separatorView = [[UIView alloc] init];
-        [separatorView setBackgroundColor:self.separatorColor];
-        [self addSubview:separatorView];
-        [separatorView setTranslatesAutoresizingMaskIntoConstraints:NO];
+        UIView *topSeparatorView = [[UIView alloc] init];
+        [topSeparatorView setBackgroundColor:self.separatorColor];
+        [self addSubview:topSeparatorView];
+        [topSeparatorView setTranslatesAutoresizingMaskIntoConstraints:NO];
+
+        UIView *bottomSeparatorView = [[UIView alloc] init];
+        [bottomSeparatorView setBackgroundColor:self.separatorColor];
+        [self addSubview:bottomSeparatorView];
+        [bottomSeparatorView setTranslatesAutoresizingMaskIntoConstraints:NO];
 
         CGFloat onePixel = 1.0f / [UIScreen mainScreen].scale;
         NSDictionary *metricsDictionary = @{@"onePixel" : [NSNumber numberWithFloat:onePixel]};
-        NSDictionary *viewsDictionary = @{@"titleLabel" : self.titleLabel, @"separatorView" : separatorView};
+        NSDictionary *viewsDictionary = @{@"headerContainerView": headerContainerView, @"titleLabel" : self.titleLabel, @"topSeparatorView" : topSeparatorView, @"bottomSeparatorView" : bottomSeparatorView};
+
+        UILabel *previousLabel = nil;
+        CGFloat labelWidth = [UIScreen mainScreen].bounds.size.width / 7;
+        for (NSString *weekday in @[@"S", @"M", @"T", @"W", @"T", @"F", @"S"]) {
+            UILabel *weekdayLabel = [[UILabel alloc] init];
+            weekdayLabel.text = weekday;
+            weekdayLabel.textAlignment = NSTextAlignmentCenter;
+            weekdayLabel.font = self.textFont;
+            weekdayLabel.textColor = [UIColor colorWithWhite:0 alpha:0.54];
+            [self addSubview:weekdayLabel];
+            [weekdayLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+            if (previousLabel != nil) {
+                [self addConstraint:[NSLayoutConstraint constraintWithItem:weekdayLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:previousLabel attribute:NSLayoutAttributeRight multiplier:1.0 constant:0.0]];
+            } else {
+                [self addConstraint:[NSLayoutConstraint constraintWithItem:weekdayLabel attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0.0]];
+            }
+            [self addConstraint:[NSLayoutConstraint constraintWithItem:weekdayLabel attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:bottomSeparatorView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:10.0]];
+            [weekdayLabel addConstraint:[NSLayoutConstraint constraintWithItem:weekdayLabel attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:20]];
+            [weekdayLabel addConstraint:[NSLayoutConstraint constraintWithItem:weekdayLabel attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:labelWidth]];
+            previousLabel = weekdayLabel;
+        }
 
         [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-(==10)-[titleLabel]-(==10)-|" options:0 metrics:nil views:viewsDictionary]];
-        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[titleLabel]|" options:0 metrics:nil views:viewsDictionary]];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[titleLabel]-(30)-|" options:0 metrics:nil views:viewsDictionary]];
 
-        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[separatorView]|" options:0 metrics:nil views:viewsDictionary]];
-        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[separatorView(==onePixel)]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[topSeparatorView]|" options:0 metrics:nil views:viewsDictionary]];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[titleLabel][bottomSeparatorView(==onePixel)]" options:0 metrics:metricsDictionary views:viewsDictionary]];
+
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[bottomSeparatorView]|" options:0 metrics:nil views:viewsDictionary]];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[topSeparatorView(==onePixel)]" options:0 metrics:metricsDictionary views:viewsDictionary]];
+
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[headerContainerView]|" options:0 metrics:nil views:viewsDictionary]];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[headerContainerView]-(30)-|" options:0 metrics:nil views:viewsDictionary]];
     }
 
     return self;

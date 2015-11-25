@@ -8,7 +8,7 @@
 
 #import "PDTSimpleCalendarViewCell.h"
 
-const CGFloat PDTSimpleCalendarCircleSize = 32.0f;
+const CGFloat PDTSimpleCalendarCircleSize = 25.0f;
 
 @interface PDTSimpleCalendarViewCell ()
 
@@ -80,13 +80,33 @@ const CGFloat PDTSimpleCalendarCircleSize = 32.0f;
         //Add the Constraints
         [self.dayLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
         [self.dayLabel setBackgroundColor:[UIColor clearColor]];
-        self.dayLabel.layer.cornerRadius = PDTSimpleCalendarCircleSize/2;
+        self.dayLabel.layer.cornerRadius = 4;
         self.dayLabel.layer.masksToBounds = YES;
 
+        self.presentEventView = [[UIView alloc] init];
+        self.presentEventView.backgroundColor = [UIColor colorWithWhite:204.f/255.f alpha:1];
+        self.presentEventView.layer.cornerRadius = 6;
+        [self.presentEventView setTranslatesAutoresizingMaskIntoConstraints:NO];
+        [self.contentView addSubview:self.presentEventView];
+
+        self.divider = [[UIView alloc] init];
+        self.divider.backgroundColor = [UIColor colorWithWhite:229.f/255.f alpha:1];
+        [self.divider setTranslatesAutoresizingMaskIntoConstraints:NO];
+        self.divider.hidden = YES;
+        [self.contentView addSubview:self.divider];
+
         [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dayLabel attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0]];
-        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dayLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0.0]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dayLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:-3.0]];
         [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dayLabel attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:PDTSimpleCalendarCircleSize]];
         [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.dayLabel attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:PDTSimpleCalendarCircleSize]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.presentEventView attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.presentEventView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.dayLabel attribute:NSLayoutAttributeBottom multiplier:1.0 constant:2.0]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.presentEventView attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:8]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.presentEventView attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:8]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.divider attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0.0]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.divider attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0.0]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.divider attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self.contentView attribute:NSLayoutAttributeRight multiplier:1.0 constant:0.0]];
+        [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:self.divider attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:1.0]];
 
         [self setCircleColor:NO selected:NO];
     }
@@ -94,17 +114,20 @@ const CGFloat PDTSimpleCalendarCircleSize = 32.0f;
     return self;
 }
 
-- (void)setDate:(NSDate *)date calendar:(NSCalendar *)calendar
-{
+- (void)setDate:(NSDate *)date calendar:(NSCalendar *)calendar hasEvent:(BOOL)hasEvent isOnBottom:(BOOL)isOnBottom {
     NSString* day = @"";
     NSString* accessibilityDay = @"";
     if (date && calendar) {
         _date = date;
         day = [PDTSimpleCalendarViewCell formatDate:date withCalendar:calendar];
         accessibilityDay = [PDTSimpleCalendarViewCell formatAccessibilityDate:date withCalendar:calendar];
+        if (!isOnBottom) {
+            self.divider.hidden = NO;
+        }
     }
     self.dayLabel.text = day;
     self.dayLabel.accessibilityLabel = accessibilityDay;
+    self.presentEventView.hidden = !hasEvent;
 }
 
 - (void)setIsToday:(BOOL)isToday
@@ -161,6 +184,8 @@ const CGFloat PDTSimpleCalendarCircleSize = 32.0f;
     [super prepareForReuse];
     _date = nil;
     _isToday = NO;
+    self.divider.hidden = YES;
+    self.presentEventView.hidden = true;
     [self.dayLabel setText:@""];
     [self.dayLabel setBackgroundColor:[self circleDefaultColor]];
     [self.dayLabel setTextColor:[self textDefaultColor]];
@@ -258,7 +283,7 @@ const CGFloat PDTSimpleCalendarCircleSize = 32.0f;
         return _textDisabledColor;
     }
 
-    return [UIColor lightGrayColor];
+    return [UIColor blackColor];
 }
 
 #pragma mark - Text Label Customizations Font
